@@ -1,32 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Orleans;
 using Orleans.Hosting;
-using HostingBuilderContext = Microsoft.Extensions.Hosting.HostBuilderContext;
-using WebHostEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
+using HostBuilderContext = Microsoft.Extensions.Hosting.HostBuilderContext;
 
 namespace Orleans.WebHostCompatibilityLayer
 {
-    public sealed class SiloServiceBuilder : ISiloBuilder
+    internal sealed class SiloServiceBuilder : ISiloBuilder
     {
-        private readonly HostingBuilderContext context = new HostingBuilderContext(new Dictionary<object, object>());
-        private readonly List<Action<HostingBuilderContext, ISiloBuilder>> configureSiloDelegates = new List<Action<HostingBuilderContext, ISiloBuilder>>();
-        private readonly List<Action<HostingBuilderContext, IServiceCollection>> configureServicesDelegates = new List<Action<HostingBuilderContext, IServiceCollection>>();
+        private readonly Dictionary<object, object> properties = new Dictionary<object, object>();
+        private readonly List<Action<HostBuilderContext, ISiloBuilder>> configureSiloDelegates = new List<Action<HostBuilderContext, ISiloBuilder>>();
+        private readonly List<Action<HostBuilderContext, IServiceCollection>> configureServicesDelegates = new List<Action<HostBuilderContext, IServiceCollection>>();
 
         public IDictionary<object, object> Properties
         {
-            get { return context.Properties; }
+            get { return properties; }
         }
 
-        public SiloServiceBuilder(IConfiguration config, WebHostEnvironment environment)
-        {
-            context.Configuration = config;
-            context.HostingEnvironment = new EnvironmentWrapper(environment);
-        }
-
-        public void Build(IServiceCollection serviceCollection)
+        public void Build(HostBuilderContext context, IServiceCollection serviceCollection)
         {
             foreach (var configurationDelegate in configureSiloDelegates)
             {
@@ -44,15 +36,19 @@ namespace Orleans.WebHostCompatibilityLayer
             }
         }
 
-        public ISiloBuilder ConfigureSilo(Action<HostingBuilderContext, ISiloBuilder> configureDelegate)
+        public ISiloBuilder ConfigureSilo(Action<HostBuilderContext, ISiloBuilder> configureDelegate)
         {
+            Guard.NotNull(configureDelegate, nameof(configureDelegate));
+
             configureSiloDelegates.Add(configureDelegate);
 
             return this;
         }
 
-        public ISiloBuilder ConfigureServices(Action<HostingBuilderContext, IServiceCollection> configureDelegate)
+        public ISiloBuilder ConfigureServices(Action<HostBuilderContext, IServiceCollection> configureDelegate)
         {
+            Guard.NotNull(configureDelegate, nameof(configureDelegate));
+
             configureServicesDelegates.Add(configureDelegate);
 
             return this;

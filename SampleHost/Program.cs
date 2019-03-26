@@ -16,28 +16,27 @@ namespace SampleHost
         public static void Main(string[] args)
         {
             WebHost.CreateDefaultBuilder(args)
-                .ConfigureServices((context, services) =>
+                .UseOrleans(builder =>
                 {
-                    services.AddOrleans(context.Configuration, context.HostingEnvironment, builder =>
+                    var siloPort = 11111;
+                    var siloAddress = IPAddress.Loopback;
+
+                    int gatewayPort = 30000;
+
+                    builder.UseDevelopmentClustering(options => options.PrimarySiloEndpoint = new IPEndPoint(siloAddress, siloPort));
+                    builder.UseInMemoryReminderService();
+                    builder.ConfigureEndpoints(siloAddress, siloPort, gatewayPort);
+                    builder.Configure<ClusterOptions>(options =>
                     {
-                        var siloPort = 11111;
-                        var siloAddress = IPAddress.Loopback;
-
-                        int gatewayPort = 30000;
-
-                        builder.UseDevelopmentClustering(options => options.PrimarySiloEndpoint = new IPEndPoint(siloAddress, siloPort));
-                        builder.UseInMemoryReminderService();
-                        builder.ConfigureEndpoints(siloAddress, siloPort, gatewayPort);
-                        builder.Configure<ClusterOptions>(options =>
-                        {
-                            options.ClusterId = "helloworldcluster";
-                            options.ServiceId = "1";
-                        });
-
-                        builder.UseDashboard(options =>
-                        {
-                            options.HostSelf = false;
-                        });
+                        options.ClusterId = "helloworldcluster";
+                        options.ServiceId = "1";
+                    });
+                })
+                .UseOrleans(builder =>
+                {
+                    builder.UseDashboard(options =>
+                    {
+                        options.HostSelf = false;
                     });
                 })
                 .ConfigureLogging(builder =>

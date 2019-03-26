@@ -4,7 +4,7 @@ using IWebHostEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 
 namespace Orleans.WebHostCompatibilityLayer
 {
-    public sealed class EnvironmentWrapper : IHostingEnvironment
+    internal sealed class EnvironmentWrapper : IHostingEnvironment
     {
         private readonly IWebHostEnvironment nested;
 
